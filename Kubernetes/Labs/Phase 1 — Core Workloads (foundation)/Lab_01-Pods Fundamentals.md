@@ -103,7 +103,8 @@ Look at:
 
 A sidecar is a secondary container in the same Kubernetes Pod as the main application container, used to provide supporting or auxiliary functionality to the main application.
 
-```Sidecar ≠ simply "two containers in one Pod."
+```
+Sidecar ≠ simply "two containers in one Pod."
 Main container + helper container = Sidecar pattern.
 ```
 
