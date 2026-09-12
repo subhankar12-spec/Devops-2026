@@ -482,25 +482,75 @@ After completing the lab, answer these without looking up the answers:
 
 What are the possible values of `.status.phase` for a Pod, and what does each mean?
 
+Pending — Pod accepted, but one or more containers haven't started yet. May be waiting for scheduling, image pull, volume setup, etc.
+
+Running — Pod scheduled and at least one container is running or starting/restarting.
+
+Succeeded — All containers terminated successfully with exit code 0 and won't restart.
+
+Failed — All containers terminated, and at least one failed with a non-zero exit code or was terminated by Kubernetes.
+
+Unknown — Kubernetes cannot determine the Pod's state, typically because communication with the node is unavailable.
+
 **Question 2**
 
 What is the difference between a container in `CrashLoopBackOff` versus one stuck in `Waiting` with reason `ContainerCreating`?
+ 
+The key difference is whether the container has actually started running.
+CrashLoopBackOff — The container started, but repeatedly crashed/terminated. Kubernetes keeps restarting it, with increasing delays between attempts.
+Common causes: application error, bad configuration, missing environment variable, failed dependency, wrong command.
+Example: app starts → crashes → restarts → crashes → CrashLoopBackOff.
+Waiting: ContainerCreating — The container hasn't started yet. Kubernetes is still preparing it.
+Common causes: image pulling, volume mounting, network setup, secrets/configmaps, CNI problems.
+Example: Pod scheduled → image/volume/network setup → container hasn't started yet.
 
 **Question 3**
 
 Why do init containers run sequentially instead of in parallel like regular containers?
 
+Init containers run sequentially because they establish prerequisites for the application and may depend on the output or successful completion of previous init containers. Regular containers are intended to run concurrently as part of the Pod's workload.
+
 **Question 4**
 
 A Pod shows `READY 0/1` but `STATUS Running`. What's the most likely cause, and which probe is responsible?
+
+Most likely cause: the readinessProbe is failing.
+
+STATUS Running → the container is running.
+
+READY 0/1 → the container is not ready to receive traffic.
+
+A failing readiness probe makes the Pod Ready=False.
 
 **Question 5**
 
 What is the practical difference between a failing `livenessProbe` and a failing `readinessProbe` from a user's perspective hitting a Service?
 
+
+From a user hitting a Service, the practical difference is:
+
+Failing readinessProbe → Kubernetes stops sending traffic to that Pod.
+
+Existing healthy Pods continue serving users.
+
+The application container is not restarted.
+
+User typically gets a response from another healthy Pod.
+
+
+Failing livenessProbe → Kubernetes restarts the container.
+
+During the restart, that Pod cannot serve requests.
+
+If other replicas exist, traffic can go to them.
+
+If it's the only replica, the user may experience errors/timeouts during the restart.
+
 **Question 6**
 
 Why can't you edit most fields (like the container image) on a live Pod directly, and what do you do instead?
+
+Pods are largely immutable after creation to maintain predictable workload state and controller reconciliation. For changes such as container images, we update the Deployment/StatefulSet/etc., which creates replacement Pods with the new specification and removes the old ones
 
 ## 1.14 Useful Commands
 
