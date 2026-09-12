@@ -101,6 +101,8 @@ Look at:
 
 ## 1.6 Lab 2 — Multi-Container Pod (Sidecar Pattern)
 
+A sidecar is a secondary container in the same Kubernetes Pod as the main application container, used to provide supporting or auxiliary functionality to the main application.
+
 Create the following file: [`pod-multicontainer.yaml`](./pod-multicontainer.yaml)
 
 ```yaml
