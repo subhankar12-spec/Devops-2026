@@ -1,0 +1,674 @@
+# ============================================================
+# Kubernetes Imperative Commands — CKA Cheat Sheet
+# ============================================================
+#
+# NOTE:
+# This is a command reference stored in YAML format.
+# Commands are grouped by Kubernetes resource.
+#
+# ============================================================
+
+
+# ============================================================
+# 1. PODS
+# ============================================================
+
+pods:
+
+  # Create a basic Pod
+  create:
+    - kubectl run nginx --image=nginx
+
+  # Create Pod with specific port
+  with_port:
+    - kubectl run nginx --image=nginx --port=80
+
+  # Create Pod with environment variable
+  with_env:
+    - kubectl run nginx --image=nginx --env="APP_ENV=prod"
+
+  # Create Pod with labels
+  with_labels:
+    - kubectl run nginx --image=nginx --labels="app=web,env=prod"
+
+  # Generate Pod YAML without creating it
+  generate_yaml:
+    - kubectl run nginx --image=nginx --dry-run=client -o yaml
+
+  # Generate and save YAML
+  save_yaml:
+    - kubectl run nginx --image=nginx --dry-run=client -o yaml > pod.yaml
+
+  # Create Pod from YAML
+  create_from_yaml:
+    - kubectl apply -f pod.yaml
+
+  # Delete Pod
+  delete:
+    - kubectl delete pod nginx
+
+
+# ============================================================
+# 2. DEPLOYMENTS
+# ============================================================
+
+deployments:
+
+  # Create Deployment
+  create:
+    - kubectl create deployment nginx --image=nginx
+
+  # Create Deployment with replicas
+  replicas:
+    - kubectl create deployment nginx --image=nginx --replicas=3
+
+  # Generate Deployment YAML
+  generate_yaml:
+    - kubectl create deployment nginx --image=nginx --dry-run=client -o yaml
+
+  # Scale Deployment
+  scale:
+    - kubectl scale deployment nginx --replicas=5
+
+  # Update image
+  set_image:
+    - kubectl set image deployment/nginx nginx=nginx:1.27
+
+  # Rollout status
+  rollout_status:
+    - kubectl rollout status deployment/nginx
+
+  # Rollout history
+  rollout_history:
+    - kubectl rollout history deployment/nginx
+
+  # Rollback
+  rollback:
+    - kubectl rollout undo deployment/nginx
+
+  # Rollout restart
+  restart:
+    - kubectl rollout restart deployment/nginx
+
+  # Delete Deployment
+  delete:
+    - kubectl delete deployment nginx
+
+
+# ============================================================
+# 3. SERVICES
+# ============================================================
+
+services:
+
+  # Expose Deployment as ClusterIP
+  cluster_ip:
+    - kubectl expose deployment nginx --port=80
+
+  # Expose as NodePort
+  nodeport:
+    - kubectl expose deployment nginx --port=80 --type=NodePort
+
+  # Expose with target port
+  target_port:
+    - kubectl expose deployment nginx --port=80 --target-port=8080
+
+  # Generate Service YAML
+  generate_yaml:
+    - kubectl expose deployment nginx --port=80 --dry-run=client -o yaml
+
+  # Delete Service
+  delete:
+    - kubectl delete service nginx
+
+
+# ============================================================
+# 4. NAMESPACE
+# ============================================================
+
+namespace:
+
+  # Create Namespace
+  create:
+    - kubectl create namespace dev
+
+  # Generate Namespace YAML
+  generate_yaml:
+    - kubectl create namespace dev --dry-run=client -o yaml
+
+  # Delete Namespace
+  delete:
+    - kubectl delete namespace dev
+
+
+# ============================================================
+# 5. CONFIGMAP
+# ============================================================
+
+configmap:
+
+  # From literal
+  from_literal:
+    - kubectl create configmap app-config --from-literal=APP_ENV=prod
+
+  # Multiple literals
+  multiple_literals:
+    - kubectl create configmap app-config --from-literal=APP_ENV=prod --from-literal=APP_PORT=8080
+
+  # From file
+  from_file:
+    - kubectl create configmap app-config --from-file=config.properties
+
+  # From directory
+  from_directory:
+    - kubectl create configmap app-config --from-file=config/
+
+  # Generate YAML
+  generate_yaml:
+    - kubectl create configmap app-config --from-literal=APP_ENV=prod --dry-run=client -o yaml
+
+  # Delete
+  delete:
+    - kubectl delete configmap app-config
+
+
+# ============================================================
+# 6. SECRET
+# ============================================================
+
+secret:
+
+  # Generic Secret
+  generic:
+    - kubectl create secret generic db-secret --from-literal=username=admin --from-literal=password=secret123
+
+  # From file
+  from_file:
+    - kubectl create secret generic db-secret --from-file=credentials.txt
+
+  # Docker registry Secret
+  docker_registry:
+    - kubectl create secret docker-registry regcred --docker-server=REGISTRY_SERVER --docker-username=USERNAME --docker-password=PASSWORD
+
+  # TLS Secret
+  tls:
+    - kubectl create secret tls tls-secret --cert=tls.crt --key=tls.key
+
+  # Generate YAML
+  generate_yaml:
+    - kubectl create secret generic db-secret --from-literal=username=admin --dry-run=client -o yaml
+
+  # Delete
+  delete:
+    - kubectl delete secret db-secret
+
+
+# ============================================================
+# 7. JOBS
+# ============================================================
+
+jobs:
+
+  # Create Job
+  create:
+    - kubectl create job hello --image=busybox -- echo "Hello Kubernetes"
+
+  # Generate YAML
+  generate_yaml:
+    - kubectl create job hello --image=busybox --dry-run=client -o yaml
+
+  # Delete Job
+  delete:
+    - kubectl delete job hello
+
+
+# ============================================================
+# 8. CRONJOB
+# ============================================================
+
+cronjob:
+
+  # Create CronJob
+  create:
+    - kubectl create cronjob hello --image=busybox --schedule="*/5 * * * *" -- echo "Hello"
+
+  # Generate YAML
+  generate_yaml:
+    - kubectl create cronjob hello --image=busybox --schedule="*/5 * * * *" --dry-run=client -o yaml
+
+  # Delete
+  delete:
+    - kubectl delete cronjob hello
+
+
+# ============================================================
+# 9. SERVICE ACCOUNT
+# ============================================================
+
+serviceaccount:
+
+  # Create ServiceAccount
+  create:
+    - kubectl create serviceaccount app-sa
+
+  # Generate YAML
+  generate_yaml:
+    - kubectl create serviceaccount app-sa --dry-run=client -o yaml
+
+  # Delete
+  delete:
+    - kubectl delete serviceaccount app-sa
+
+
+# ============================================================
+# 10. LABELS
+# ============================================================
+
+labels:
+
+  # Add label to Pod
+  pod:
+    - kubectl label pod nginx app=web
+
+  # Add label to Node
+  node:
+    - kubectl label node worker1 disktype=ssd
+
+  # Overwrite existing label
+  overwrite:
+    - kubectl label pod nginx app=frontend --overwrite
+
+  # Remove label
+  remove:
+    - kubectl label pod nginx app-
+
+
+# ============================================================
+# 11. ANNOTATIONS
+# ============================================================
+
+annotations:
+
+  # Add annotation
+  add:
+    - kubectl annotate pod nginx description="Web server"
+
+  # Overwrite annotation
+  overwrite:
+    - kubectl annotate pod nginx description="Updated" --overwrite
+
+  # Remove annotation
+  remove:
+    - kubectl annotate pod nginx description-
+
+
+# ============================================================
+# 12. SCALE
+# ============================================================
+
+scale:
+
+  # Scale Deployment
+  deployment:
+    - kubectl scale deployment nginx --replicas=3
+
+  # Scale ReplicaSet
+  replicaset:
+    - kubectl scale replicaset nginx --replicas=3
+
+  # Scale StatefulSet
+  statefulset:
+    - kubectl scale statefulset web --replicas=3
+
+
+# ============================================================
+# 13. EDIT / PATCH
+# ============================================================
+
+modify:
+
+  # Interactive edit
+  edit:
+    - kubectl edit pod nginx
+    - kubectl edit deployment nginx
+    - kubectl edit service nginx
+
+  # Patch resource
+  patch:
+    - kubectl patch deployment nginx -p '{"spec":{"replicas":3}}'
+
+  # Patch image
+  patch_image:
+    - kubectl patch deployment nginx -p '{"spec":{"template":{"spec":{"containers":[{"name":"nginx","image":"nginx:1.27"}]}}}}'
+
+
+# ============================================================
+# 14. DELETE
+# ============================================================
+
+delete:
+
+  # Delete Pod
+  pod:
+    - kubectl delete pod nginx
+
+  # Delete multiple Pods
+  multiple_pods:
+    - kubectl delete pod nginx redis mysql
+
+  # Delete by label
+  by_label:
+    - kubectl delete pod -l app=web
+
+  # Delete everything from YAML
+  from_yaml:
+    - kubectl delete -f pod.yaml
+
+  # Delete all Pods in namespace
+  all_pods:
+    - kubectl delete pods --all
+
+  # Delete Deployment and Service
+  resources:
+    - kubectl delete deployment nginx service nginx
+
+
+# ============================================================
+# 15. APPLY / CREATE FROM YAML
+# ============================================================
+
+yaml_operations:
+
+  # Apply YAML
+  apply:
+    - kubectl apply -f pod.yaml
+
+  # Apply directory
+  directory:
+    - kubectl apply -f ./manifests/
+
+  # Apply recursively
+  recursive:
+    - kubectl apply -R -f ./manifests/
+
+  # Create instead of apply
+  create:
+    - kubectl create -f pod.yaml
+
+
+# ============================================================
+# 16. IMPERATIVE COMMAND + YAML GENERATION
+# ============================================================
+
+dry_run:
+
+  # Pod
+  pod:
+    - kubectl run nginx --image=nginx --dry-run=client -o yaml
+
+  # Deployment
+  deployment:
+    - kubectl create deployment nginx --image=nginx --dry-run=client -o yaml
+
+  # Namespace
+  namespace:
+    - kubectl create namespace dev --dry-run=client -o yaml
+
+  # ConfigMap
+  configmap:
+    - kubectl create configmap app-config --from-literal=ENV=prod --dry-run=client -o yaml
+
+  # Secret
+  secret:
+    - kubectl create secret generic db-secret --from-literal=password=secret --dry-run=client -o yaml
+
+  # Service
+  service:
+    - kubectl expose deployment nginx --port=80 --dry-run=client -o yaml
+
+  # Job
+  job:
+    - kubectl create job hello --image=busybox --dry-run=client -o yaml
+
+  # CronJob
+  cronjob:
+    - kubectl create cronjob hello --image=busybox --schedule="*/5 * * * *" --dry-run=client -o yaml
+
+
+# ============================================================
+# 17. ROLLOUT COMMANDS
+# ============================================================
+
+rollout:
+
+  # Status
+  status:
+    - kubectl rollout status deployment/nginx
+
+  # History
+  history:
+    - kubectl rollout history deployment/nginx
+
+  # Undo
+  undo:
+    - kubectl rollout undo deployment/nginx
+
+  # Undo to specific revision
+  undo_revision:
+    - kubectl rollout undo deployment/nginx --to-revision=2
+
+  # Restart
+  restart:
+    - kubectl rollout restart deployment/nginx
+
+  # Pause
+  pause:
+    - kubectl rollout pause deployment/nginx
+
+  # Resume
+  resume:
+    - kubectl rollout resume deployment/nginx
+
+
+# ============================================================
+# 18. IMPERATIVE TROUBLESHOOTING COMMANDS
+# ============================================================
+
+troubleshooting:
+
+  # Get Pods
+  get_pods:
+    - kubectl get pods
+    - kubectl get pods -o wide
+    - kubectl get pods -A
+
+  # Describe Pod
+  describe:
+    - kubectl describe pod nginx
+
+  # Logs
+  logs:
+    - kubectl logs nginx
+    - kubectl logs nginx -f
+    - kubectl logs nginx --previous
+
+  # Execute command
+  exec:
+    - kubectl exec -it nginx -- bash
+    - kubectl exec -it nginx -- sh
+
+  # Run command inside container
+  exec_command:
+    - kubectl exec nginx -- hostname
+    - kubectl exec nginx -- env
+
+  # Events
+  events:
+    - kubectl get events
+    - kubectl get events --sort-by=.metadata.creationTimestamp
+
+  # Resource usage
+  top:
+    - kubectl top nodes
+    - kubectl top pods
+
+
+# ============================================================
+# 19. CONTEXT / NAMESPACE
+# ============================================================
+
+context:
+
+  # Current context
+  current:
+    - kubectl config current-context
+
+  # List contexts
+  list:
+    - kubectl config get-contexts
+
+  # Switch context
+  switch:
+    - kubectl config use-context <context-name>
+
+  # Set default namespace
+  set_namespace:
+    - kubectl config set-context --current --namespace=dev
+
+  # View configuration
+  view:
+    - kubectl config view
+
+
+# ============================================================
+# 20. NODE OPERATIONS
+# ============================================================
+
+nodes:
+
+  # List Nodes
+  get:
+    - kubectl get nodes
+    - kubectl get nodes -o wide
+
+  # Describe Node
+  describe:
+    - kubectl describe node worker1
+
+  # Label Node
+  label:
+    - kubectl label node worker1 disktype=ssd
+
+  # Cordon Node
+  cordon:
+    - kubectl cordon worker1
+
+  # Uncordon Node
+  uncordon:
+    - kubectl uncordon worker1
+
+  # Drain Node
+  drain:
+    - kubectl drain worker1 --ignore-daemonsets
+
+  # Force drain
+  force_drain:
+    - kubectl drain worker1 --ignore-daemonsets --force --delete-emptydir-data
+
+
+# ============================================================
+# 21. RESOURCE GENERATION SHORTCUTS
+# ============================================================
+
+quick_reference:
+
+  pod:
+    - kubectl run <name> --image=<image>
+
+  deployment:
+    - kubectl create deployment <name> --image=<image>
+
+  service:
+    - kubectl expose deployment <name> --port=<port>
+
+  namespace:
+    - kubectl create namespace <name>
+
+  configmap:
+    - kubectl create configmap <name> --from-literal=KEY=VALUE
+
+  secret:
+    - kubectl create secret generic <name> --from-literal=KEY=VALUE
+
+  job:
+    - kubectl create job <name> --image=<image> -- <command>
+
+  cronjob:
+    - kubectl create cronjob <name> --image=<image> --schedule="<cron>" -- <command>
+
+  serviceaccount:
+    - kubectl create serviceaccount <name>
+
+
+# ============================================================
+# 22. CKA MUST-KNOW IMPERATIVE COMMANDS
+# ============================================================
+
+cka_must_know:
+
+  # Pod
+  - kubectl run nginx --image=nginx
+
+  # Generate Pod YAML
+  - kubectl run nginx --image=nginx --dry-run=client -o yaml
+
+  # Deployment
+  - kubectl create deployment nginx --image=nginx
+
+  # Scale
+  - kubectl scale deployment nginx --replicas=3
+
+  # Update image
+  - kubectl set image deployment/nginx nginx=nginx:1.27
+
+  # Service
+  - kubectl expose deployment nginx --port=80 --type=NodePort
+
+  # ConfigMap
+  - kubectl create configmap app-config --from-literal=ENV=prod
+
+  # Secret
+  - kubectl create secret generic db-secret --from-literal=password=secret
+
+  # Namespace
+  - kubectl create namespace dev
+
+  # Job
+  - kubectl create job hello --image=busybox -- echo hello
+
+  # CronJob
+  - kubectl create cronjob hello --image=busybox --schedule="*/5 * * * *" -- echo hello
+
+  # Labels
+  - kubectl label pod nginx app=web
+
+  # Cordon
+  - kubectl cordon worker1
+
+  # Drain
+  - kubectl drain worker1 --ignore-daemonsets
+
+  # Rollout
+  - kubectl rollout status deployment/nginx
+
+  # Rollback
+  - kubectl rollout undo deployment/nginx
+
+  # Logs
+  - kubectl logs nginx
+
+  # Execute
+  - kubectl exec -it nginx -- bash
+
+  # Events
+  - kubectl get events --sort-by=.metadata.creationTimestamp
