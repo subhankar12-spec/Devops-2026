@@ -40,6 +40,97 @@ look."* → Scheduler couldn't place it (check `kubectl describe pod` events for
 failures — insufficient resources, unmatched affinity/taint) → if scheduled but not starting,
 it's a kubelet/runtime problem on that node (image pull failure, volume mount failure).
 
+## 2.1 Kubernetes Command Flow
+
+The key rule:
+
+> **`kubectl` talks to the `kube-apiserver`. It does not directly talk to the scheduler, controller-manager, or etcd.**
+
+### Example: `kubectl apply -f pod.yaml`
+
+```text
+User
+  kubectl apply -f pod.yaml
+ 
+  Authorize (RBAC)
+ 
+ 
+ 
+kube-scheduler
+  Selects a suitable node
+ 
+ 
+kubelet
+  On the selected node
+ 
+  Create container
+ 
+ 
+  
+  
+  
+  
+  
+  
+  
+  
+  
+  
+  
+  
+  
+  
+  
+  
+  
+kubelet
+  
+Container Runtime
+  
+Container terminated
+```
+
+If the Pod is managed by a Deployment:
+
+```text
+Deployment
+   
+ReplicaSet
+   
+Pod deleted
+   
+ReplicaSet creates replacement Pod
+   
+Scheduler selects node
+   
+kubelet
+   
+Container Runtime
+```
+
+---
+
+### The Big Picture
+
+```text
+                        kube-apiserver
+                       /      |       \
+                      /       |        \
+                   etcd   scheduler   controllers
+                             
+                             
+                                   
+                                   
+                                   
+                                   
+API Server
+   Desired State
+  
+API Server
+  
+Container Runtime
+   kube-apiserver` is the starting point for Kubernetes API operations.
+
 ## 3. Pods — the atomic unit
 
 A Pod is the smallest deployable unit — one or more containers that share network namespace
