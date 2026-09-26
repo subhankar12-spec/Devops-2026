@@ -40,96 +40,276 @@ look."* → Scheduler couldn't place it (check `kubectl describe pod` events for
 failures — insufficient resources, unmatched affinity/taint) → if scheduled but not starting,
 it's a kubelet/runtime problem on that node (image pull failure, volume mount failure).
 
-## 2.1 Kubernetes Command Flow
+## 2.1 Command Flow — What Happens When You Run `kubectl`
 
-The key rule:
+The most important idea:
 
-> **`kubectl` talks to the `kube-apiserver`. It does not directly talk to the scheduler, controller-manager, or etcd.**
+> **`kubectl` does NOT talk directly to the kubelet, scheduler, or etcd. It talks to the `kube-apiserver`.**
 
-### Example: `kubectl apply -f pod.yaml`
+### Example: Creating a Pod
+
+Suppose you run:
+
+```bash
+kubectl apply -f pod.yaml
+```
+
+The flow is:
 
 ```text
-User
-  kubectl apply -f pod.yaml
- 
-  Authorize (RBAC)
- 
- 
- 
+You
+ │
+ │ kubectl apply -f pod.yaml
+ ▼
+kube-apiserver
+ │
+ ├──► Authentication
+ │
+ ├──► Authorization (RBAC)
+ │
+ ├──► Admission / Validation
+ │
+ ▼
+etcd
+ │
+ │ Pod object is stored
+ ▼
+API Server
+ │
+ ▼
 kube-scheduler
-  Selects a suitable node
- 
- 
-kubelet
-  On the selected node
- 
-  Create container
- 
- 
-  
-  
-  
-  
-  
-  
-  
-  
-  
-  
-  
-  
-  
-  
-  
-  
-  
-kubelet
-  
+ │
+ │ Finds an appropriate node
+ │
+ ▼
+API Server
+ │
+ │ Pod gets nodeName assigned
+ ▼
+kubelet on selected node
+ │
+ │ Watches API Server for assigned Pods
+ ▼
 Container Runtime
-  
+ │
+ │ Pull image if necessary
+ │ Create container
+ │ Start container
+ ▼
+Container running
+```
+
+### Step-by-step
+
+| Step | Component         | What happens                                      |
+| ---- | ----------------- | ------------------------------------------------- |
+| 1    | `kubectl`         | Sends the request to `kube-apiserver`             |
+| 2    | `kube-apiserver`  | Authenticates and authorizes the request          |
+| 3    | `kube-apiserver`  | Validates/admission-processes the object          |
+| 4    | `etcd`            | Stores the desired Pod state                      |
+| 5    | `kube-scheduler`  | Sees the unscheduled Pod and selects a node       |
+| 6    | `kube-apiserver`  | Stores the Pod's node assignment                  |
+| 7    | `kubelet`         | On that node, sees the assigned Pod               |
+| 8    | Container runtime | Pulls image and starts the container              |
+| 9    | `kubelet`         | Reports Pod/container status back to API server   |
+| 10   | `etcd`            | Cluster state is persisted through the API server |
+
+### Example: `kubectl get pods`
+
+```bash
+kubectl get pods
+```
+
+Flow:
+
+```text
+kubectl
+   │
+   │ GET /api/.../pods
+   ▼
+kube-apiserver
+   │
+   ▼
+etcd
+   │
+   │ Pod information
+   ▼
+kube-apiserver
+   │
+   ▼
+kubectl
+   │
+   ▼
+Terminal output
+```
+
+**Important:** `kubectl get pods` does not ask every node's kubelet for its Pods.
+The API server returns the cluster state that is stored/managed through `etcd`.
+
+---
+
+### Example: `kubectl logs`
+
+```bash
+kubectl logs mypod
+```
+
+Simplified flow:
+
+```text
+kubectl
+   │
+   ▼
+kube-apiserver
+   │
+   │ Request logs for Pod/container
+   ▼
+kubelet on the Pod's node
+   │
+   │ Retrieves container logs
+   ▼
+kube-apiserver
+   │
+   ▼
+kubectl
+   │
+   ▼
+Terminal
+```
+
+Here the **kubelet is involved**, because the logs originate from the container running on that node.
+
+---
+
+### Example: `kubectl exec`
+
+```bash
+kubectl exec -it mypod -- sh
+```
+
+Flow:
+
+```text
+kubectl
+   │
+   ▼
+kube-apiserver
+   │
+   ▼
+kubelet on Pod's node
+   │
+   ▼
+Container Runtime
+   │
+   ▼
+Shell inside container
+```
+
+---
+
+### Example: `kubectl delete pod`
+
+```bash
+kubectl delete pod mypod
+```
+
+Flow:
+
+```text
+kubectl
+   │
+   ▼
+kube-apiserver
+   │
+   ▼
+etcd
+ │
+ │ Pod deletion recorded
+ ▼
+Controllers / kubelet observe change
+ │
+ ▼
+kubelet
+ │
+ ▼
+Container Runtime
+ │
+ ▼
 Container terminated
 ```
 
-If the Pod is managed by a Deployment:
+If the Pod belongs to a **Deployment**, the ReplicaSet controller will notice that the desired replica count is no longer satisfied and create a replacement Pod.
 
 ```text
 Deployment
-   
+    │
+    ▼
 ReplicaSet
-   
+    │
+    ▼
 Pod deleted
-   
+    │
+    ▼
 ReplicaSet creates replacement Pod
-   
+    │
+    ▼
 Scheduler selects node
-   
+    │
+    ▼
 kubelet
-   
+    │
+    ▼
 Container Runtime
 ```
 
 ---
 
-### The Big Picture
+### Key Rule to Remember
 
 ```text
-                        kube-apiserver
-                       /      |       \
-                      /       |        \
-                   etcd   scheduler   controllers
-                             
-                             
-                                   
-                                   
-                                   
-                                   
+                    kube-apiserver
+                   /      |       \
+                  /       |        \
+               etcd   scheduler   controllers
+                                  |
+                                  ▼
+                              API Server
+                                  |
+                                  ▼
+                              kubelet
+                                  |
+                                  ▼
+                         container runtime
+                                  |
+                                  ▼
+                              container
+```
+
+### CKA Mental Model
+
+Think of Kubernetes as:
+
+```text
+kubectl
+   ↓
 API Server
-   Desired State
-  
+   ↓
+Desired State → etcd
+   ↓
+Controllers / Scheduler
+   ↓
 API Server
-  
+   ↓
+Kubelet
+   ↓
 Container Runtime
-   kube-apiserver` is the starting point for Kubernetes API operations.
+   ↓
+Container
+```
+
+**`kubectl` → API Server is the starting point for almost every Kubernetes command.**
+
+
 
 ## 3. Pods — the atomic unit
 
