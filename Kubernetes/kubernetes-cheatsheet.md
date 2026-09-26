@@ -25,7 +25,7 @@ Everything else in K8s is a variation on this control-loop pattern.
 | `kube-apiserver` | Front door — all reads/writes (including from `kubectl`) go through it; validates and persists to etcd |
 | `etcd` | Distributed key-value store — the single source of truth for all cluster state |
 | `kube-scheduler` | Decides which node a new Pod should run on, based on resources/affinity/taints |
-| `kube-controller-manager` | Runs the core control loops (Node controller, ReplicaSet controller, Job controller, etc.) |
+| `kube-controller-manager` | Runs the core control loops (Node controller, ReplicaSet controller, Job controller, etc.) that continuously compare desired state with actual state and reconcile the difference. This provides Kubernetes' self-healing behavior. |
 | `cloud-controller-manager` | Cloud-provider-specific glue (e.g. provisioning an AWS ELB for a `LoadBalancer` Service) |
 
 **Node (worker) components:**
