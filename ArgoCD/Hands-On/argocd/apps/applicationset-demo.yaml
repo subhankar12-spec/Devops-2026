@@ -1,0 +1,38 @@
+apiVersion: argoproj.io/v1alpha1
+kind: ApplicationSet
+metadata:
+  name: nginx-environments
+  namespace: argocd
+
+spec:
+  generators:
+    - list:
+        elements:
+          - environment: dev
+            valuesFile: values-dev.yaml
+          - environment: prod
+            valuesFile: values-prod.yaml
+
+  template:
+    metadata:
+      name: 'argocd-demo-{{environment}}'
+
+    spec:
+      project: nginx-project
+
+      source:
+        repoURL: https://github.com/subhankar12-spec/Devops-2026.git
+        targetRevision: HEAD
+        path: ArgoCD/Hands-On/nginx
+
+        helm:
+          valueFiles:
+            - '{{valuesFile}}'
+
+      destination:
+        server: https://kubernetes.default.svc
+        namespace: default
+
+      syncPolicy:
+        automated:
+          selfHeal: true

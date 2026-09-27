@@ -1,7 +1,8 @@
 apiVersion: argoproj.io/v1alpha1
 kind: Application
+
 metadata:
-  name: argocd-demo-prod
+  name: root-app
   namespace: argocd
 
 spec:
@@ -10,15 +11,11 @@ spec:
   source:
     repoURL: https://github.com/subhankar12-spec/Devops-2026.git
     targetRevision: HEAD
-    path: ArgoCD/Hands-On/nginx
-
-    helm:
-      valueFiles:
-        - values-prod.yaml
+    path: ArgoCD/Hands-On/argocd/apps
 
   destination:
     server: https://kubernetes.default.svc
-    namespace: default
+    namespace: argocd
 
   syncPolicy:
     automated:

@@ -1,0 +1,15 @@
+apiVersion: argoproj.io/v1alpha1
+kind: AppProject
+metadata:
+  name: nginx-project
+  namespace: argocd
+
+spec:
+  description: Nginx application project
+
+  sourceRepos:
+    - https://github.com/subhankar12-spec/Devops-2026.git
+
+  destinations:
+    - namespace: default
+      server: https://kubernetes.default.svc
