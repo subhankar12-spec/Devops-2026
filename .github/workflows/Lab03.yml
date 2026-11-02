@@ -1,0 +1,29 @@
+name: Lab 03 - Job DAG
+on: [workflow_dispatch]
+permissions:
+  contents: read
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    steps:
+      - run: echo 'tests passed'
+  lint:
+    runs-on: ubuntu-latest
+    steps:
+      - run: echo 'lint passed'
+  build:
+    needs: [test, lint]
+    runs-on: ubuntu-latest
+    steps:
+      - run: echo 'building after both checks'
+  summary:
+    if: always()
+    needs: [test, lint, build]
+    runs-on: ubuntu-latest
+    steps:
+      - name: Show statuses
+        env:
+          TEST: ${{ needs.test.result }}
+          LINT: ${{ needs.lint.result }}
+          BUILD: ${{ needs.build.result }}
+        run: echo "test=$TEST lint=$LINT build=$BUILD"
